@@ -63,8 +63,8 @@ def det0(w,k):
     #print(S_s)
     #return np.real(np.linalg.det(S_s))
     return np.abs(np.linalg.det(S_s)*10.0**90)
-def disp(k0):
-    value=sc.optimize.fsolve(det0,k0,args=k0,full_output=False)
+def disp(k):
+    value=sc.optimize.fsolve(det0,k,args=k,full_output=False)
     return value[0]
 
 for i in range(100):
