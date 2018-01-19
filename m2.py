@@ -169,5 +169,5 @@ def field():
 print(Hz)
 return Hx,Hy,Hz
 
-dispersion(1e6,1e8,20e9,50e9)
+#dispersion(1e6,1e8,20e9,50e9)
 fourier(2000,3)
