@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 19 15:15:00 2018
+
+@author: s.Kolodny
+"""
+
 from sympy.solvers import solve as slv
 from sympy import Symbol, Matrix, Function
 import scipy as sc
@@ -33,6 +40,10 @@ Na = -(4 * Kc1 / (mu0 * Ms ** 2)) * np.tensordot(z, z, axes=0)
 Y=28e9*mu0
 wM=Y*Ms
 t2=np.linspace(0,9999,10000)
+
+dx=5.0
+dy=5.0
+dz=5.0
 
 def det0(w,k,h):
     L = (1j*w/(Y*Ms))*E
@@ -71,70 +82,106 @@ def dispersion(k_min,k_max,w_min,w_max):
     return
 
 
-def fourier(rt,n):
-    m_x=np.zeros(np.size(t2),dtype=complex)
-    m_y = np.zeros(np.size(t2),dtype=complex)
-    m_z = np.zeros(np.size(t2),dtype=complex)
-    h_t1=np.zeros((np.size(t2)),dtype=complex)
-    for z in range(n):
-        h_t1+=4000*np.exp(-(((t2-rt*z-30))**2)/1)
-    h_w1=np.fft.fft(h_t1)
-    w1=np.fft.fftfreq(h_w1.size)
-    print(w1)
 
-    for i in range(int(np.size(t2))):
-        if i==0:
-            i+=1
-        mv=det0(w1[i]*1e11,4.5e6,[0,h_w1[i],0])
-        m_x[i]=mv[0]
-        m_y[i]=mv[1]
-        m_z[i]=mv[2]
-
-    m_x_t=np.fft.ifft(m_x)
-    m_y_t = np.fft.ifft(m_y)
-    m_z_t = np.fft.ifft(m_z)
-    m_x_i=interp1d(t2,m_x_t.real,kind='cubic')
-    m_y_i = interp1d(t2, m_y_t.real, kind='cubic')
-    tnew=np.linspace(0, 9999, num=100000, endpoint=True)
-    plt.figure(2)
-    plt.title("precession")
-    plt.plot(t2,h_t1.real)
-    plt.show()
-    plt.figure(3)
-    plt.title("precession")
-    plt.plot(m_x_i(tnew), m_y_i(tnew))
-    plt.plot(0,0,'.')
-    plt.show()
-    plt.figure(4)
-    plt.title("precession")
-    plt.plot(m_x_t, m_y_t)
-    plt.plot(0,0,'o')
-    plt.show()
-    return
+#
+#def field():
+#    x_c = open('xcomp_180.txt', 'r')
+#    y_c = open('ycomp_180.txt', 'r')
+#    z_c = open('zcomp_180.txt', 'r')
+#    l1 = [line.strip() for line in x_c]
+#    l2 = [line.strip() for line in y_c]
+#    l3 = [line.strip() for line in z_c]
+#    Ef = np.zeros((4, 21), dtype=complex)
+#    Hf = np.zeros((4, 21), dtype=complex)
+#    for i in range(21):
+#        temp1 = l1[i].split()
+#        temp2 = l2[i].split()
+#        temp3 = l3[i].split()
+#        Ef[0, i] = float(temp1[0])
+#        Hf[0, i] = float(temp1[0])
+#        Ef[1, i] = float(temp1[1]) + 1j * float(temp1[2])
+#        Ef[2, i] = 0
+#        # Ef[2, i] = float(temp2[1]) + 1j * float(temp2[2])
+#        Ef[3, i] = float(temp3[1]) + 1j * float(temp3[2])
+#        print(Ef[1:, i])
+#        Hf[1:, i] = -(1j) * np.cross(Ef[1:, i], np.conj(Ef[1:, i]))
+#    print(Hf)
+#    return Hf
 
 def field():
-    x_c = open('xcomp_180.txt', 'r')
-    y_c = open('ycomp_180.txt', 'r')
-    z_c = open('zcomp_180.txt', 'r')
-    l1 = [line.strip() for line in x_c]
-    l2 = [line.strip() for line in y_c]
-    l3 = [line.strip() for line in z_c]
-    Ef = np.zeros((4, 21), dtype=complex)
-    Hf = np.zeros((4, 21), dtype=complex)
-    for i in range(21):
-        temp1 = l1[i].split()
-        temp2 = l2[i].split()
-        temp3 = l3[i].split()
-        Ef[0, i] = float(temp1[0])
-        Hf[0, i] = float(temp1[0])
-        Ef[1, i] = float(temp1[1]) + 1j * float(temp1[2])
-        Ef[2, i] = 0
-        # Ef[2, i] = float(temp2[1]) + 1j * float(temp2[2])
-        Ef[3, i] = float(temp3[1]) + 1j * float(temp3[2])
-        print(Ef[1:, i])
-        Hf[1:, i] = -(1j) * np.cross(Ef[1:, i], np.conj(Ef[1:, i]))
-    print(Hf)
-    return Hf
+    txt = open('Ex.txt', 'r')
+    x=np.zeros(21)
+    y=np.zeros(21)
+    z=np.zeros(61)
 
+    Ex=np.zeros((21,21,61),dtype=complex)
+    Ey=np.zeros((21,21,61),dtype=complex)
+    Ez=np.zeros((21,21,61),dtype=complex)
+    
+    Hx=np.zeros((21,21,61),dtype=complex)
+    Hy=np.zeros((21,21,61),dtype=complex)
+    Hz=np.zeros((21,21,61),dtype=complex)
+    l1 = [line.strip() for line in txt]
+    for i in range(np.size(l1)):
+        temp = l1[i].split()
+        temp1=[float(i) for i in temp]
+        if temp1[0]<=100 and temp1[0]>=0 and temp1[1]<=100 and temp1[1]>=0 and temp1[2]<=0 and temp1[2]>=-300:
+            Ex[int(abs(temp1[0])/dx),:,int(abs(temp1[2])/dz)]=float(temp1[3])+1j*float(temp1[6])
+            Ey[int(abs(temp1[0])/dx),:,int(abs(temp1[2])/dz)]=float(temp1[4])+1j*float(temp1[7])
+            Ez[int(abs(temp1[0])/dx),:,int(abs(temp1[2])/dz)]=float(temp1[5])+1j*float(temp1[8])
+            x[int(abs(temp1[0])/dx)]=temp[0]
+            y[int(abs(temp1[1])/dy)]=temp[1]
+            z[int(abs(temp1[2])/dz)]=temp[2]
+            E=[float(temp1[3])+1j*float(temp1[6]),0,float(temp1[5])+1j*float(temp1[8])]
+            H=-(1j/16*np.pi)*np.cross(E,np.conj(E))
+            Hx[int(abs(temp1[0])/dx),:,int(abs(temp1[2])/dz)]=H[0]
+            Hy[int(abs(temp1[0])/dx),:,int(abs(temp1[2])/dz)]=H[1]
+            Hz[int(abs(temp1[0])/dx),:,int(abs(temp1[2])/dz)]=H[2]
+print(Hz)
+return Hx,Hy,Hz,x,y,z
+
+def fmap( rt, n):
+    z_c=np.zeros((21,21,3,np.size(t2)),dtype=complex)
+    y_c=np.zeros((21,61,3,np.size(t2)),dtype=complex)
+    z_c_w=np.zeros((21,21,3,np.size(t2)),dtype=complex)
+    y_c_w=np.zeros((21,61,3,np.size(t2)),dtype=complex)
+    w_p=np.fft.fftfreq(np.size(t2))
+    m_w_z=np.zeros((21,21,3,np.size(t2)),dtype=complex)
+    m_w_y=np.zeros((21,61,3,np.size(t2)),dtype=complex)
+    m_t_z=np.zeros((21,21,3,np.size(t2)),dtype=complex)
+    m_t_y=np.zeros((21,61,3,np.size(t2)),dtype=complex)
+    Hx,Hy,Hz,x,y,z=field()
+    for i in range(21):
+        for j in range(21):
+            for z in range(n):
+                z_c[i,j,0,:] += Hx[i,j,0] * np.exp(-(((t2 - rt * z)) ** 2) /4)
+#                z_c[i,j,1,:] += Hy[i,j,0] * np.exp(-(((t2 - rt * z)) ** 2) /4)
+                z_c[i,j,2,:] += Hz[i,j,0] * np.exp(-(((t2 - rt * z)) ** 2) /4)
+    for i in range(21):
+        for j in range(21):
+            z_c_w[i,j,0,:]=np.fft.fft(z_c[i,j,0,:])
+            z_c_w[i,j,1,:]=np.fft.fft(z_c[i,j,1,:])
+            z_c_w[i,j,2,:]=np.fft.fft(z_c[i,j,2,:])
+            for z in range(np.size(t2)):
+                m_w_z[i,j,:,z]=det0(w_p[z],1e7,z_c_w[i,j,:,z])
+#
+#    Hxw=np.fft.fft(Hxt)
+#    Hxt2=np.fft.ifft(Hxw)
+##    print(Hxw.real)
+#    w1 = np.fft.fftfreq(Hxw.size)
+#    print(w1)
+    plt.figure(4)
+    plt.title("precession")
+    plt.subplot(3,1,1)
+    plt.plot(t2,Hxt)
+#    plt.xlim(0,1000)
+    plt.subplot(3,1,2)
+    plt.plot(w1, np.abs(Hxw))
+    plt.xlim(0,0.5)
+    plt.subplot(3,1,3)
+    plt.plot(Hxt2.real)
+#    plt.xlim(0,1000)
+    #plt.plot(0,0,'o')
+    plt.show()
 dispersion(1e6,1e8,20e9,50e9)
 fourier(2000,3)
